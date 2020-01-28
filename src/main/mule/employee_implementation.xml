@@ -47,6 +47,7 @@ payload.data map (item, index) ->
 } ]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b6c84b6b-42ec-4865-85b0-c9167000b039" message="#[payload]"/>
 		<foreach doc:name="For Each" doc:id="10d8b072-cb4c-439a-b941-aabbf5dfd47c" collection="#[payload]">
 			<validation:is-true doc:name="Is true" doc:id="d503eaca-2218-4199-b8d8-8b3e4ff1ab35" expression="#[payload.employee_age &gt;18]"/>
 			<db:insert doc:name="Insert" doc:id="a53a49eb-81dd-4d20-b557-5f0cc422b728" config-ref="Database_Config1">
