@@ -1,0 +1,32 @@
+#%RAML 1.0
+title: Employee
+
+
+  
+/Employee:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: 
+            example: !include examples/employee.json
+  post:
+    body:
+      application/json:
+        example:
+
+    responses:
+      201:
+        body:
+          application/json:
+                              
+              
+  /{ID}: 
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                         

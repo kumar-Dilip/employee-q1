@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ff9c01cc-2498-4e16-a35e-10451792991d" >
+		<http:request-connection host="dummy.restapiexample.com" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="f670ad1b-c9b0-4d00-b50a-7fbb6247a078" >
+		<http:request-connection host="dummy.restapiexample.com" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="2bb23858-c2ff-41d4-a022-11e48d009bfb" >
+		<http:request-connection host="dummy.restapiexample.com" />
+	</http:request-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="951eb45d-0a19-496d-a93d-b967f8ce38a3" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="dilip.kumar@apisero.com" password="14@september" timeoutUnit="MICROSECONDS" >
+			<reconnection />
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="employee_implementationFlow" doc:id="5d731282-26cf-41fe-b175-19aa05d8f0bd" >
+		<http:request method="GET" doc:name="Request" doc:id="87b2ddce-fbaf-44c0-a513-fd74c125cf4e" config-ref="HTTP_Request_configuration1" path="/api/v1/employees"/>
+		<ee:transform doc:name="Transform Message" doc:id="5c566953-2773-4c14-ac39-883b0a06eb6e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="id" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data map (item, index) ->
+{
+    "id": item.id,
+    "employee_name": item.employee_name
+} ]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="10d8b072-cb4c-439a-b941-aabbf5dfd47c" collection="#[payload]">
+			<validation:is-true doc:name="Is true" doc:id="d503eaca-2218-4199-b8d8-8b3e4ff1ab35" expression="#[payload.employee_age &gt;18]"/>
+			<db:insert doc:name="Insert" doc:id="a53a49eb-81dd-4d20-b557-5f0cc422b728" config-ref="Database_Config1">
+			<db:sql>INSERT INTO employee (id,employee_name,employee_salary,employee_age,profile_image) values    (:id,:employee_name,:employee_salary,:employee_age,:profile_image)</db:sql>
+				<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+		</db:insert>
+		</foreach>
+		<os:store doc:name="Store" doc:id="0a6d7982-b854-4e4f-9347-e8e606bde62c" key="employee">
+			<os:value ><![CDATA[#[vars.id]]]></os:value>
+		</os:store>
+		<logger level="INFO" doc:name="Logger" doc:id="4b0aa18c-5bd7-40ca-8bb1-55d1ece6288b" message="#[vars.id]"/>
+	</flow>
+	<flow name="employee_implementationFlow1" doc:id="adfaa8d5-d387-4b59-b54f-e8d737b655f1" >
+		<ee:transform doc:name="Transform Message" doc:id="40cd6106-c45f-4147-849e-0c2d282b294f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="7f5a462c-3ad0-417b-857c-9d925a642f13" >
+			<validation:is-true doc:name="Is true" doc:id="65639d62-5ddc-493b-808c-80a55b8837f4" expression="#[payload.employee_age &gt;18]"/>
+			<db:insert doc:name="Insert" doc:id="f09af8b9-930c-42d5-b2fa-a9664d08f49c" config-ref="Database_Config1" >
+				<db:sql >INSERT INTO employee (id,employee_name,employee_salary,employee_age,profile_image) values    (:id,:employee_name,:employee_salary,:employee_age,:profile_image)</db:sql>
+				<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<email:send doc:name="Send" doc:id="f3b2053f-233d-433b-82e9-d6524601c6d7" config-ref="Email_SMTP" fromAddress="dilip.kumar@apisero.com">
+			<email:to-addresses >
+				<email:to-address value="dilip.kumar@apisero.com" />
+			</email:to-addresses>
+			<email:body contentType="text/plain" encoding="UTF-8">
+			</email:body>
+		</email:send>
+	</flow>
+</mule>
